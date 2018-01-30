@@ -32,3 +32,15 @@ HEADERS += \
 
 FORMS += \
         mainwindow.ui
+
+INCLUDEPATH += /usr/local/cuda-9.1/include
+
+INCLUDEPATH += /usr/local/zed/include
+
+INCLUDEPATH += /usr/local/include/opencv
+
+INCLUDEPATH += /usr/local/include/opencv2
+
+LIBS += -L/usr/local/lib -lopencv_core -lopencv_imgcodecs -lopencv_highgui -lopencv_imgproc -lopencv_features2d -lopencv_video -lopencv_videoio -lopencv_videostab
+
+LIBS += -L/usr/local/zed/lib/ -lsl_core -lsl_zed -lsl_input
