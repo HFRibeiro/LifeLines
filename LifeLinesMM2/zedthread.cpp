@@ -10,9 +10,11 @@
 //// ZED include
 #include "sl/Camera.hpp"
 
-
 #define SAVE_LEFT
-#define SAVE_RIGTH
+#define SAVE_LEFT_SPLIT_COLORS
+#define SAVE_RIGHT
+#define SAVE_RIGHT_SPLIT_COLORS
+
 #define SAVE_DEPTH
 
 //// Using std and sl namespaces
@@ -66,21 +68,41 @@ void zedthread::run()
 
     int width = image_size.width;
     int height = image_size.height;
+    int fps = (int) zed.getCameraFPS();
 
     // Create a Mat to store images
 
     #ifdef SAVE_LEFT
-    cv::VideoWriter video_left("video_left.avi",CV_FOURCC('H','2','6','4'),60, cv::Size(1280,720),true);
+    cv::VideoWriter video_left("video_left.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
     Mat zed_image_left(width, height, MAT_TYPE_8U_C4);
     #endif
 
-    #ifdef SAVE_RIGTH
-    cv::VideoWriter video_right("video_right.avi",CV_FOURCC('H','2','6','4'),60, cv::Size(1280,720),true);
+    #ifdef SAVE_LEFT_SPLIT_COLORS
+    #ifndef SAVE_LEFT
+         Mat zed_image_left(width, height, MAT_TYPE_8U_C4);
+    #endif
+    cv::VideoWriter video_left_blue("video_left_blue.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    cv::VideoWriter video_left_green("video_left_green.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    cv::VideoWriter video_left_red("video_left_red.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    #endif
+
+
+    #ifdef SAVE_RIGHT
+    cv::VideoWriter video_right("video_right.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
     Mat  zed_image_right(width, height, MAT_TYPE_8U_C4);
     #endif
 
+    #ifdef SAVE_RIGHT_SPLIT_COLORS
+    #ifndef SAVE_RIGHT
+         Mat zed_image_right(width, height, MAT_TYPE_8U_C4);
+    #endif
+    cv::VideoWriter video_right_blue("video_right_blue.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    cv::VideoWriter video_right_green("video_right_green.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    cv::VideoWriter video_right_red("video_right_red.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    #endif
+
     #ifdef SAVE_DEPTH
-    cv::VideoWriter video_depth("video_depth.avi",CV_FOURCC('H','2','6','4'),60, cv::Size(1280,720),true);
+    cv::VideoWriter video_depth("video_depth.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
     Mat  depth_image(width, height, MAT_TYPE_32F_C1);
     #endif
 
@@ -100,17 +122,76 @@ void zedthread::run()
             cv::Mat left_image_ocv = slMat2cvMat(zed_image_left);
             cv::cvtColor(left_image_ocv, left_image_ocv, CV_RGBA2RGB);
             video_left.write(left_image_ocv);
-            cv::imshow("VIEW_LEFT", left_image_ocv);
+            //qDebug() << "saving left";
+            //cv::imshow("VIEW_LEFT",left_image_ocv);
+            #endif
+
+            #ifdef SAVE_LEFT_SPLIT_COLORS
+            #ifndef SAVE_LEFT
+            zed.retrieveImage(zed_image_left, VIEW_LEFT);
+            cv::Mat left_image_ocv = slMat2cvMat(zed_image_left);
+            cv::cvtColor(left_image_ocv, left_image_ocv, CV_RGBA2RGB);
+            #endif
+            cv::Mat blue_left = cv::Mat::zeros(left_image_ocv.rows, left_image_ocv.cols, CV_8UC3 );
+            cv::Mat green_left = cv::Mat::zeros(left_image_ocv.rows, left_image_ocv.cols, CV_8UC3 );
+            cv::Mat red_left = cv::Mat::zeros(left_image_ocv.rows, left_image_ocv.cols, CV_8UC3 );
+
+            cv::Mat channels_left[] = { red_left, green_left, blue_left };
+            int from_to_left[] = {0,2, 1,4, 2,6 };
+
+            cv::mixChannels( &left_image_ocv, 1, channels_left, 3, from_to_left, 3);
+
+            video_left_blue.write(blue_left);
+            video_left_green.write(green_left);
+            video_left_red.write(red_left);
+
+            //qDebug() << "saving left blue";
+            //qDebug() << "saving left green";
+            //qDebug() << "saving left red";
+
+            //cv::imshow("blue left channel",blue_left);
+            //cv::imshow("green left channel",green_left);
+            //cv::imshow("red left channel",red_left);
 
             #endif
 
-            #ifdef SAVE_RIGTH
+            #ifdef SAVE_RIGHT
 
             zed.retrieveImage(zed_image_right, VIEW_RIGHT);
             cv::Mat right_image_ocv = slMat2cvMat(zed_image_right);
             cv::cvtColor(right_image_ocv, right_image_ocv, CV_RGBA2RGB);
             video_right.write(right_image_ocv);
-            cv::imshow("VIEW_RIGHT", right_image_ocv);
+            //cv::imshow("VIEW_RIGHT", right_image_ocv);
+            //qDebug() << "saving right";
+
+            #endif
+
+            #ifdef SAVE_RIGHT_SPLIT_COLORS
+            #ifndef SAVE_RIGHT
+            zed.retrieveImage(zed_image_right, VIEW_RIGHT);
+            cv::Mat right_image_ocv = slMat2cvMat(zed_image_right);
+            cv::cvtColor(right_image_ocv, right_image_ocv, CV_RGBA2RGB);
+            #endif
+            cv::Mat blue_right = cv::Mat::zeros(right_image_ocv.rows, right_image_ocv.cols, CV_8UC3 );
+            cv::Mat green_right = cv::Mat::zeros(right_image_ocv.rows, right_image_ocv.cols, CV_8UC3 );
+            cv::Mat red_right = cv::Mat::zeros(right_image_ocv.rows, right_image_ocv.cols, CV_8UC3 );
+
+            cv::Mat channels_right[] = { red_right, green_right, blue_right };
+            int from_to_right[] = {0,2, 1,4, 2,6 };
+
+            cv::mixChannels( &right_image_ocv, 1, channels_right, 3, from_to_right, 3);
+
+            video_right_blue.write(blue_right);
+            video_right_green.write(green_right);
+            video_right_red.write(red_right);
+
+            //qDebug() << "saving right blue";
+            //qDebug() << "saving right green";
+            //qDebug() << "saving right red";
+
+            //cv::imshow("blue right channel",blue_right);
+            //cv::imshow("green right channel",green_right);
+            //cv::imshow("red right channel",red_right);
 
             #endif
 
@@ -120,9 +201,14 @@ void zedthread::run()
             cv::Mat depth_image_ocv = slMat2cvMat(depth_image);
             cv::cvtColor(depth_image_ocv, depth_image_ocv, CV_RGBA2RGB);
             video_depth.write(depth_image_ocv);
-            cv::imshow("VIEW_DEPTH", depth_image_ocv);
+
+            //qDebug() << "saving depth";
+
+            //cv::imshow("VIEW_DEPTH", depth_image_ocv);
 
             #endif
+
+            sleep_ms(20);
 
             // Handle keyboard shortcuts
             //updateCameraSettings(key, zed);
@@ -130,10 +216,27 @@ void zedthread::run()
         }
     }
     // Exit
+
     zed.close();
+    #ifdef SAVE_LEFT
     video_left.release();
+    #endif
+    #ifdef SAVE_RIGHT
     video_right.release();
+    #endif
+    #ifdef SAVE_DEPTH
     video_depth.release();
+    #endif
+    #ifdef SAVE_LEFT_SPLIT_COLORS
+    video_left_blue.release();
+    video_left_green.release();
+    video_left_red.release();
+    #endif
+    #ifdef SAVE_RIGHT_SPLIT_COLORS
+    video_right_blue.release();
+    video_right_green.release();
+    video_right_red.release();
+    #endif
 
 }
 
