@@ -2,6 +2,13 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QHostAddress>
+#include <QDebug>
+#include <QtNetwork>
+#include <QObject>
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QThread>
 
 namespace Ui {
 class MainWindow;
@@ -15,8 +22,17 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+private slots:
+    void acceptConnection();
+
+    void startRead();
+
+    void on_btSend_clicked();
+
 private:
     Ui::MainWindow *ui;
+    QTcpServer server;
+    QTcpSocket* client;
 };
 
 #endif // MAINWINDOW_H
