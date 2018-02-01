@@ -147,7 +147,7 @@ void zedthread::run()
 
     int width = image_size.width;
     int height = image_size.height;
-    int fps = (int) zed.getCameraFPS();
+    int fps = (int) zed.getCameraFPS() / 2 ;
 
     // Create a Mat to store images
 
