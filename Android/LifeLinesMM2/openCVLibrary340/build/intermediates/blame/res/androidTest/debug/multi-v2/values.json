@@ -3,6 +3,10 @@
         {
             "outputFile": "/home/code/AndroidStudioProjects/LifeLinesMM2/openCVLibrary340/build/intermediates/incremental/mergeDebugAndroidTestResources/merged.dir/values/values.xml",
             "map": []
+        },
+        {
+            "outputFile": "/home/code/git/LifeLines/Android/LifeLinesMM2/openCVLibrary340/build/intermediates/incremental/mergeDebugAndroidTestResources/merged.dir/values/values.xml",
+            "map": []
         }
     ]
 }
