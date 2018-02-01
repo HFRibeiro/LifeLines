@@ -23,9 +23,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String PREFS_NAME = "MyPrefsFile";
 
     AsyncConnection socketConnection = null;
-    Button sendButton;
     ToggleButton tg_save;
-    EditText sendData;
 
     TimerTask updateConnection;
     Timer timer;
@@ -63,14 +61,6 @@ public class MainActivity extends AppCompatActivity {
 
         startTimer(5);
 
-        sendButton = findViewById(R.id.sendButton);
-        sendData = findViewById(R.id.sendData);
-
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                sendDataSocket(sendData.getText().toString());
-            }
-        });
 
         tg_save.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
