@@ -17,6 +17,12 @@
 
 #define SAVE_DEPTH
 
+bool save_left = false;
+bool save_leftRGB = false;
+bool save_right = false;
+bool save_rightRGB = false;
+bool save_depth = false;
+
 //// Using std and sl namespaces
 using namespace std;
 using namespace sl;
@@ -25,7 +31,6 @@ using namespace sl;
 CAMERA_SETTINGS camera_settings_ = CAMERA_SETTINGS_BRIGHTNESS; // create a camera settings handle
 string str_camera_settings = "BRIGHTNESS";
 int step_camera_setting = 1;
-
 
 //// Sample functions
 void updateCameraSettings(char key, Camera &zed);
@@ -39,11 +44,85 @@ zedthread::zedthread()
     saving = false;
 }
 
+bool zedthread::isCameraOn()
+{
+    Camera zed;
+    ///////// Initialize and open the camera ///////////////
+    ERROR_CODE err; // error state for all ZED SDK functions
+
+    // Open the camera
+    err = zed.open();
+
+    if (err != SUCCESS)
+    {
+        cout << toString(err) << endl;
+        zed.close();
+        qDebug() << EXIT_FAILURE;
+        return false;
+    }
+    else
+    {
+        cout << toString(err) << endl;
+        zed.close();
+        return true;
+    }
+
+}
+
+void zedthread::setVideos(int id)
+{
+    switch (id) {
+    case 0:
+        save_left = true;
+        qDebug() << "SAVE_LEFT On";
+        break;
+    case 1:
+        save_leftRGB = true;
+        qDebug() << "SAVE_RIGHT On";
+        break;
+    case 2:
+         save_right = true;
+        qDebug() << "SAVE_RIGHT On";
+        break;
+    case 3:
+         save_rightRGB = true;
+        qDebug() << "SAVE_RIGHT_SPLIT_COLORS On";
+        break;
+    case 4:
+         save_depth = true;
+        qDebug() << "SAVE_DEPTH On";
+        break;
+    case 5:
+         save_left = false;
+        qDebug() << "SAVE_LEFT Off";
+        break;
+    case 6:
+         save_leftRGB = false;
+        qDebug() << "SAVE_LEFT_SPLIT_COLORS Off";
+        break;
+    case 7:
+         save_right = false;
+        qDebug() << "SAVE_RIGHT Off";
+        break;
+    case 8:
+         save_rightRGB = false;
+        qDebug() << "SAVE_RIGHT_SPLIT_COLORS Off";
+        break;
+    case 9:
+         save_depth = false;
+        qDebug() << "SAVE_DEPTH Off";
+        break;
+
+    default:
+        break;
+    }
+}
+
 void zedthread::run()
 {
+
     ///////// Create a ZED camera //////////////////////////
     Camera zed;
-
     ///////// Initialize and open the camera ///////////////
     ERROR_CODE err; // error state for all ZED SDK functions
 
@@ -121,7 +200,7 @@ void zedthread::run()
             zed.retrieveImage(zed_image_left, VIEW_LEFT);
             cv::Mat left_image_ocv = slMat2cvMat(zed_image_left);
             cv::cvtColor(left_image_ocv, left_image_ocv, CV_RGBA2RGB);
-            video_left.write(left_image_ocv);
+            if(save_left) video_left.write(left_image_ocv);
             //qDebug() << "saving left";
             //cv::imshow("VIEW_LEFT",left_image_ocv);
             #endif
@@ -141,9 +220,9 @@ void zedthread::run()
 
             cv::mixChannels( &left_image_ocv, 1, channels_left, 3, from_to_left, 3);
 
-            video_left_blue.write(blue_left);
-            video_left_green.write(green_left);
-            video_left_red.write(red_left);
+            if(save_leftRGB) video_left_blue.write(blue_left);
+            if(save_leftRGB) video_left_green.write(green_left);
+            if(save_leftRGB) video_left_red.write(red_left);
 
             //qDebug() << "saving left blue";
             //qDebug() << "saving left green";
@@ -160,7 +239,7 @@ void zedthread::run()
             zed.retrieveImage(zed_image_right, VIEW_RIGHT);
             cv::Mat right_image_ocv = slMat2cvMat(zed_image_right);
             cv::cvtColor(right_image_ocv, right_image_ocv, CV_RGBA2RGB);
-            video_right.write(right_image_ocv);
+            if(save_right) video_right.write(right_image_ocv);
             //cv::imshow("VIEW_RIGHT", right_image_ocv);
             //qDebug() << "saving right";
 
@@ -181,9 +260,9 @@ void zedthread::run()
 
             cv::mixChannels( &right_image_ocv, 1, channels_right, 3, from_to_right, 3);
 
-            video_right_blue.write(blue_right);
-            video_right_green.write(green_right);
-            video_right_red.write(red_right);
+            if(save_rightRGB) video_right_blue.write(blue_right);
+            if(save_rightRGB) video_right_green.write(green_right);
+            if(save_rightRGB) video_right_red.write(red_right);
 
             //qDebug() << "saving right blue";
             //qDebug() << "saving right green";
@@ -200,7 +279,7 @@ void zedthread::run()
             zed.retrieveImage(depth_image, VIEW_DEPTH);
             cv::Mat depth_image_ocv = slMat2cvMat(depth_image);
             cv::cvtColor(depth_image_ocv, depth_image_ocv, CV_RGBA2RGB);
-            video_depth.write(depth_image_ocv);
+            if(save_depth) video_depth.write(depth_image_ocv);
 
             //qDebug() << "saving depth";
 
@@ -218,25 +297,21 @@ void zedthread::run()
     // Exit
 
     zed.close();
-    #ifdef SAVE_LEFT
-    video_left.release();
-    #endif
-    #ifdef SAVE_RIGHT
-    video_right.release();
-    #endif
-    #ifdef SAVE_DEPTH
-    video_depth.release();
-    #endif
-    #ifdef SAVE_LEFT_SPLIT_COLORS
-    video_left_blue.release();
-    video_left_green.release();
-    video_left_red.release();
-    #endif
-    #ifdef SAVE_RIGHT_SPLIT_COLORS
-    video_right_blue.release();
-    video_right_green.release();
-    video_right_red.release();
-    #endif
+    if(save_left) video_left.release();
+    if(save_right) video_right.release();
+    if(save_depth) video_depth.release();
+    if(save_leftRGB)
+    {
+        video_left_blue.release();
+        video_left_green.release();
+        video_left_red.release();
+    }
+    if(save_rightRGB)
+    {
+        video_right_blue.release();
+        video_right_green.release();
+        video_right_red.release();
+    }
 
 }
 
@@ -387,7 +462,6 @@ cv::Mat slMat2cvMat(Mat& input) {
     // cv::Mat and sl::Mat will share a single memory structure
     return cv::Mat(input.getHeight(), input.getWidth(), cv_type, input.getPtr<sl::uchar1>(MEM_CPU));
 }
-
 
 
 

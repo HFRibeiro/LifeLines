@@ -29,6 +29,10 @@ private slots:
 
     void on_btSend_clicked();
 
+    void send(QString data);
+
+    void closeEvent (QCloseEvent *event);
+
 private:
     Ui::MainWindow *ui;
     QTcpServer server;
