@@ -1,0 +1,82 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <EditText
+        android:id="@+id/sendData"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Send data" />
+
+    <Button
+        android:id="@+id/sendButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <CheckBox
+            android:id="@+id/rb_right"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:onClick="onCheckButtonClicked"
+            android:text="Right"
+            android:textSize="13sp" />
+
+        <CheckBox
+            android:id="@+id/rb_depth"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:onClick="onCheckButtonClicked"
+            android:text="Depth"
+            android:textSize="13sp" />
+
+        <CheckBox
+            android:id="@+id/rb_leftRGB"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:onClick="onCheckButtonClicked"
+            android:text="LeftRGB"
+            android:textSize="13sp" />
+
+        <CheckBox
+            android:id="@+id/rb_rightRGB"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:onClick="onCheckButtonClicked"
+            android:text="RightRGB"
+            android:textSize="13sp" />
+
+        <CheckBox
+            android:id="@+id/rb_left"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:onClick="onCheckButtonClicked"
+            android:text="Left"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Saving video: "
+        android:textAlignment="center" />
+
+    <ToggleButton
+        android:id="@+id/tg_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ON" />
+
+</LinearLayout>
