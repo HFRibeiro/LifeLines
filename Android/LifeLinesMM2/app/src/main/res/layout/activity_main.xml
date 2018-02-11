@@ -1,5 +1,4 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
@@ -66,5 +65,21 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="ON" />
+
+    <Button
+        android:id="@+id/bt_requestImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Request Image" />
+
+    <ProgressBar
+        android:id="@+id/pb_request"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="100"
+        android:progress="0"
+        android:visibility="invisible" />
+
 
 </LinearLayout>

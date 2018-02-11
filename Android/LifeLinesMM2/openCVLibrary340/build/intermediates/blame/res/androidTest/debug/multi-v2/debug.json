@@ -7,6 +7,10 @@
         {
             "outputFile": "/home/code/AndroidStudioProjects/LifeLinesMM2/openCVLibrary340/build/intermediates/res/merged/androidTest/debug/values_values.arsc.flat",
             "map": []
+        },
+        {
+            "outputFile": "/home/lifelines/LifeLines/Android/LifeLinesMM2/openCVLibrary340/build/intermediates/res/merged/androidTest/debug/values_values.arsc.flat",
+            "map": []
         }
     ]
 }

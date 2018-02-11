@@ -1,29 +1,44 @@
 package com.lifelines.code.lifelinesmm2;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.RadioButton;
-import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.ToggleButton;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.OpenCVLoader;
 
+import java.io.InputStream;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity {
+import static android.widget.ImageView.ScaleType.MATRIX;
+
+public class MainActivity extends AppCompatActivity  {
 
     public static final String PREFS_NAME = "MyPrefsFile";
 
+    String configs = "",urlImg = "http://10.42.0.1/cap/img.jpg";
+
     AsyncConnection socketConnection = null;
     ToggleButton tg_save;
+    Button bt_requestImage;
 
     TimerTask updateConnection;
     Timer timer;
@@ -34,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
     SharedPreferences.Editor editor;
 
-    String configs = "";
+    ProgressBar pb_request;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,12 +70,15 @@ public class MainActivity extends AppCompatActivity {
         rb_depth = findViewById(R.id.rb_depth);
         tg_save = findViewById(R.id.tg_save);
 
+        bt_requestImage = findViewById(R.id.bt_requestImage);
+        pb_request = findViewById(R.id.pb_request);
+
+
         configs = settings.getString("configs","00000");
         setChecks(configs);
         Log.e("configsRead:",configs);
 
         startTimer(5);
-
 
         tg_save.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -75,7 +93,72 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        bt_requestImage.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
 
+                sendDataSocket("getImage");
+                pb_request.setVisibility(View.VISIBLE);
+
+                ProgressBarAnimation anim = new ProgressBarAnimation(pb_request, 0, 100);
+                anim.setDuration(3500);
+                pb_request.startAnimation(anim);
+
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        socketConnection.disconnect();
+                        new DownloadImageFromInternet().execute(urlImg);
+                    }
+                }, 3000);
+            }
+        });
+
+    }
+
+
+    private class DownloadImageFromInternet extends AsyncTask<String, Void, Bitmap> {
+        public DownloadImageFromInternet() {
+            Log.i("Download","Start");
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            String imageURL = urls[0];
+            Bitmap binge = null;
+            try {
+                InputStream in = new java.net.URL(imageURL).openStream();
+                binge = BitmapFactory.decodeStream(in);
+
+            } catch (Exception e) {
+                Log.e("Error Message", e.getMessage());
+                e.printStackTrace();
+            }
+
+            return binge;
+        }
+
+        protected void onPostExecute(Bitmap result) {
+            showImage(result);
+            pb_request.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    public void showImage(Bitmap result) {
+        Dialog builder = new Dialog(this);
+        builder.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        builder.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                //nothing;
+            }
+        });
+
+        ImageView imageView = new ImageView(this);
+        imageView.setImageBitmap(result);
+        imageView.setScaleType(MATRIX);
+        builder.addContentView(imageView, new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT));
+        builder.show();
     }
 
     public void onCheckButtonClicked(View view)
@@ -132,8 +215,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void didReceiveData(String data)
     {
+
         Log.i("Received: ",data);
     }
+
 
     public void didDisconnect()
     {
@@ -186,4 +271,5 @@ public class MainActivity extends AppCompatActivity {
         if(str.charAt(3)=='1') rb_rightRGB.setChecked(true);
         if(str.charAt(4)=='1') rb_depth.setChecked(true);
     }
+
 }

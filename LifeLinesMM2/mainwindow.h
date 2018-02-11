@@ -33,6 +33,8 @@ private slots:
 
     void closeEvent (QCloseEvent *event);
 
+    void sendImage();
+
 private:
     Ui::MainWindow *ui;
     QTcpServer server;
