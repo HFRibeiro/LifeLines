@@ -10,6 +10,7 @@
 #include <QTcpSocket>
 #include <QThread>
 #include <QTimer>
+#include <QTime>
 
 namespace Ui {
 class MainWindow;

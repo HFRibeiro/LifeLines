@@ -47,6 +47,16 @@ zedthread::zedthread()
     trackName = "";
 }
 
+QString zedthread::getDateNow()
+{
+    QString date1 = QDate::currentDate().toString();
+    date1 = date1.remove(0,date1.indexOf(" ")+1);
+    date1 = date1.replace(" ","_");
+    QString date2 = QTime::currentTime().toString();
+    QString finalDate = date1+"-"+date2;
+    return finalDate;
+}
+
 bool zedthread::isCameraOn()
 {
     Camera zed;
@@ -121,10 +131,6 @@ void zedthread::setVideos(int id)
     }
 }
 
-void zedthread::setTrackName(QString name)
-{
-    trackName = name;
-}
 
 void zedthread::run()
 {
@@ -163,11 +169,21 @@ void zedthread::run()
     int height = image_size.height;
     int fps = (int) zed.getCameraFPS() / 2 ;
 
+    trackName = getDateNow();
+    qDebug() << "Trackname: "<< trackName;
+
+    qDebug() << "creat: " << QString(defaultVideoFolder)+trackName;
+
+    QDir dir(QString(defaultVideoFolder)+trackName);
+    if (!dir.exists()){
+      dir.mkdir(QString(defaultVideoFolder)+trackName);
+    }
+
     // Create a Mat to store images
     string name = "";
 
     #ifdef SAVE_LEFT
-    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_left.avi");
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("/"); name.append(trackName.toLocal8Bit()); name.append("-left.avi");
     cv::VideoWriter video_left(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
     Mat zed_image_left(width, height, MAT_TYPE_8U_C4);
     #endif
@@ -176,17 +192,17 @@ void zedthread::run()
     #ifndef SAVE_LEFT
          Mat zed_image_left(width, height, MAT_TYPE_8U_C4);
     #endif
-    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_left_blue.avi");
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("/"); name.append(trackName.toLocal8Bit()); name.append("-left_blue.avi");
     cv::VideoWriter video_left_blue(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
-    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_left_green.avi");
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("/"); name.append(trackName.toLocal8Bit()); name.append("-left_green.avi");
     cv::VideoWriter video_left_green(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
-    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_left_red.avi");
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("/"); name.append(trackName.toLocal8Bit()); name.append("-left_red.avi");
     cv::VideoWriter video_left_red(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
     #endif
 
 
     #ifdef SAVE_RIGHT
-    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_right.avi");
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("/"); name.append(trackName.toLocal8Bit()); name.append("-right.avi");
     cv::VideoWriter video_right(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
     Mat  zed_image_right(width, height, MAT_TYPE_8U_C4);
     #endif
@@ -195,16 +211,16 @@ void zedthread::run()
     #ifndef SAVE_RIGHT
          Mat zed_image_right(width, height, MAT_TYPE_8U_C4);
     #endif
-    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_right_blue.avi");
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("/"); name.append(trackName.toLocal8Bit()); name.append("-right_blue.avi");
     cv::VideoWriter video_right_blue(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
-    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_right_green.avi");
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("/"); name.append(trackName.toLocal8Bit()); name.append("-right_green.avi");
     cv::VideoWriter video_right_green(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
-    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_right_red.avi");
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("/"); name.append(trackName.toLocal8Bit()); name.append("-right_red.avi");
     cv::VideoWriter video_right_red(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
     #endif
 
     #ifdef SAVE_DEPTH
-    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_depth.avi");
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("/"); name.append(trackName.toLocal8Bit()); name.append("-depth.avi");
     cv::VideoWriter video_depth(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
     Mat  depth_image(width, height, MAT_TYPE_32F_C1);
     #endif
@@ -319,6 +335,8 @@ void zedthread::run()
         }
     }
     // Exit
+
+
 
     zed.close();
     if(save_left) video_left.release();

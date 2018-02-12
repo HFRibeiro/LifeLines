@@ -67,13 +67,10 @@ public class MainActivity extends AppCompatActivity  {
 
     ImageView im_hardware = null,im_software = null;
 
-    EditText tb_track;
-
     boolean saving = false,connected = false,hardware_state = false,software_state = false,hardware_state_old = false,software_state_old = false;
 
     int recordTime = 0,countZedCheck = 5;
 
-    int defaultTrackNumber = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,8 +103,6 @@ public class MainActivity extends AppCompatActivity  {
         im_hardware = findViewById(R.id.im_hardware);
         im_software = findViewById(R.id.im_software);
 
-        tb_track = findViewById(R.id.tb_track);
-
         setGray();
 
         /////////////////////////////// NETWORK CHECK /////////////////////////////////////////
@@ -116,9 +111,6 @@ public class MainActivity extends AppCompatActivity  {
             if(getNetworkName().equals(AcceptSSID))
             {
                 configs = settings.getString("configs","00000");
-                defaultTrackNumber = settings.getInt("track",0);
-                defaultTrackNumber++;
-                tb_track.setText("Track_"+String.valueOf(defaultTrackNumber));
                 setChecks(configs);
                 Log.e("configsRead:",configs);
 
@@ -146,49 +138,17 @@ public class MainActivity extends AppCompatActivity  {
             public void onClick(View v) {
                 if(tg_save.isChecked())
                 {
-                    String name = tb_track.getText().toString();
-                    if(name.isEmpty())
-                    {
-                        Toast.makeText(myMain,"Please insert a Track name first", LENGTH_SHORT).show();
-                        tg_save.setChecked(false);
-                    }
-                    else if(name.equals("reset"))
-                    {
-                        editor.putInt("track", 0);
-                        editor.commit();
-                        Toast.makeText(myMain,"Track back to 1", LENGTH_SHORT).show();
-                        tb_track.setText("Track_1");
-                        tg_save.setChecked(false);
-                    }
-                    else
-                    {
-                        defaultTrackNumber++;
-                        editor.putInt("track", defaultTrackNumber);
-                        editor.commit();
-
-                        sendDataSocket("trackName"+name);
-
-                        saving = true;
-
-                        final Handler handler = new Handler();
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                sendDataSocket("startSaving");
-                                txt_saving.setTextColor(Color.GREEN);
-                                txt_saving.setText("Saving video 0s");
-                            }
-                        }, 500);
-
-                    }
+                    saving = true;
+                    sendDataSocket("startSaving");
+                    txt_saving.setTextColor(Color.GREEN);
+                    txt_saving.setText("Recording 0s");
                 }
                 else
                 {
                     saving = false;
                     sendDataSocket("stopSaving");
-                    tb_track.setText("Track_"+String.valueOf(defaultTrackNumber));
                     txt_saving.setTextColor(Color.GRAY);
-                    txt_saving.setText("Not saving video");
+                    txt_saving.setText("Not recording");
                 }
             }
         });
@@ -211,7 +171,7 @@ public class MainActivity extends AppCompatActivity  {
                         socketConnection.interrupted = true;
                         new DownloadImageFromInternet().execute(urlImg);
                     }
-                }, 3000);
+                }, 1500);
             }
         });
 

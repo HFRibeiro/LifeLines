@@ -1,16 +1,16 @@
 #ifndef ZEDTHREAD_H
 #define ZEDTHREAD_H
 #include <QtCore>
+#include <QTime>
 
 class zedthread : public QThread
 {
 
 private slots:
-
+    QString getDateNow();
 public slots:
     bool isCameraOn();
     void setVideos(int id);
-    void setTrackName(QString name);
 
 public:
     zedthread();

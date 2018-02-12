@@ -107,11 +107,6 @@ void MainWindow::startRead()
     {
       if(zThread->saving) send("SAVING_OK");
     }
-    else if(dataRecieved.contains("trackName"))
-    {
-        zThread->setTrackName(dataRecieved.replace("trackName",""));
-    }
-
 
     ui->plainTextEdit->appendPlainText("Recived: "+dataRecieved+"\n");
 }
