@@ -1,11 +1,16 @@
 package com.lifelines.code.lifelinesmm2;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +24,7 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -31,6 +37,8 @@ import java.util.TimerTask;
 import static android.widget.ImageView.ScaleType.MATRIX;
 
 public class MainActivity extends AppCompatActivity  {
+
+    final String AcceptSSID = "\"LifeLinesMM2\"";
 
     public static final String PREFS_NAME = "MyPrefsFile";
 
@@ -49,7 +57,14 @@ public class MainActivity extends AppCompatActivity  {
 
     SharedPreferences.Editor editor;
 
-    ProgressBar pb_request;
+    ProgressBar pb_request,pb_check;
+
+    TextView txt = null,txt_request = null,txt_system = null;
+
+    ImageView im_hardware = null,im_software = null;
+
+    boolean saving = false,connected = false,hardware_state = false,software_state = false,hardware_state_old = false,software_state_old = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +76,11 @@ public class MainActivity extends AppCompatActivity  {
         editor = settings.edit();
 
         myMain = this;
-        socketConnection = new  AsyncConnection("10.42.0.1",1234,1000,myMain);
+
+        txt = findViewById(R.id.txt);
+        txt_request = findViewById(R.id.txt_request);
+        txt_system = findViewById(R.id.txt_system);
+
 
         rb_left = findViewById(R.id.rb_left);
         rb_leftRGB = findViewById(R.id.rb_leftRGB);
@@ -72,22 +91,56 @@ public class MainActivity extends AppCompatActivity  {
 
         bt_requestImage = findViewById(R.id.bt_requestImage);
         pb_request = findViewById(R.id.pb_request);
+        pb_check = findViewById(R.id.pb_check);
 
 
-        configs = settings.getString("configs","00000");
-        setChecks(configs);
-        Log.e("configsRead:",configs);
+        im_hardware = findViewById(R.id.im_hardware);
+        im_software = findViewById(R.id.im_software);
 
-        startTimer(5);
+        setGray();
+
+        /////////////////////////////// NETWORK CHECK /////////////////////////////////////////
+        if(isNetworkConnected())
+        {
+            if(getNetworkName().equals(AcceptSSID))
+            {
+                configs = settings.getString("configs","00000");
+                setChecks(configs);
+                Log.e("configsRead:",configs);
+
+                socketConnection = new  AsyncConnection("10.42.0.1",1234,1000,myMain);
+
+                startTimer(5);
+            }
+            else
+            {
+                Log.e("Network: " , "is "+getNetworkName()+"\nPlease connect to "+AcceptSSID+" network");
+                txt.setText("Network: " + "is "+getNetworkName()+"\nPlease connect to "+AcceptSSID+" network");
+                setGray();
+            }
+
+        }
+        else
+        {
+            Log.e("Network: " , "is not connected!\nPlease connect to "+AcceptSSID+" network");
+            txt.setText("Network: " + "is not connected!\nPlease connect to "+AcceptSSID+" network");
+            setGray();
+        }
+        /////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
         tg_save.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if(tg_save.isChecked())
                 {
+                    saving = true;
                     sendDataSocket("startSaving");
                 }
                 else
                 {
+                    saving = false;
                     sendDataSocket("stopSaving");
                 }
             }
@@ -98,8 +151,9 @@ public class MainActivity extends AppCompatActivity  {
 
                 sendDataSocket("getImage");
                 pb_request.setVisibility(View.VISIBLE);
+                txt_request.setVisibility(View.VISIBLE);
 
-                ProgressBarAnimation anim = new ProgressBarAnimation(pb_request, 0, 100);
+                ProgressBarAnimation anim = new ProgressBarAnimation(pb_request,txt_request,"", 0, 100);
                 anim.setDuration(3500);
                 pb_request.startAnimation(anim);
 
@@ -107,15 +161,14 @@ public class MainActivity extends AppCompatActivity  {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        socketConnection.disconnect();
+                        socketConnection.interrupted = true;
                         new DownloadImageFromInternet().execute(urlImg);
                     }
                 }, 3000);
             }
         });
 
-    }
-
+    }//Fim OnCreate
 
     private class DownloadImageFromInternet extends AsyncTask<String, Void, Bitmap> {
         public DownloadImageFromInternet() {
@@ -126,8 +179,8 @@ public class MainActivity extends AppCompatActivity  {
             String imageURL = urls[0];
             Bitmap binge = null;
             try {
-                InputStream in = new java.net.URL(imageURL).openStream();
-                binge = BitmapFactory.decodeStream(in);
+                InputStream inputStream = new java.net.URL(imageURL).openStream();
+                binge = BitmapFactory.decodeStream(inputStream);
 
             } catch (Exception e) {
                 Log.e("Error Message", e.getMessage());
@@ -140,6 +193,7 @@ public class MainActivity extends AppCompatActivity  {
         protected void onPostExecute(Bitmap result) {
             showImage(result);
             pb_request.setVisibility(View.INVISIBLE);
+            txt_request.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -156,7 +210,6 @@ public class MainActivity extends AppCompatActivity  {
 
         ImageView imageView = new ImageView(this);
         imageView.setImageBitmap(result);
-        imageView.setScaleType(MATRIX);
         builder.addContentView(imageView, new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT));
         builder.show();
     }
@@ -190,6 +243,14 @@ public class MainActivity extends AppCompatActivity  {
     class UpdateConnectionTask extends TimerTask {
 
         public void run() {
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    checkSoftwareHardware();
+                }
+            });
+
             if(socketConnection==null)
             {
                 socketConnection.execute();
@@ -206,6 +267,7 @@ public class MainActivity extends AppCompatActivity  {
                 }
                 else
                 {
+
                     //Log.i("Connected","...");
                 }
             }
@@ -213,15 +275,48 @@ public class MainActivity extends AppCompatActivity  {
         }
     }
 
+    private void checkSoftwareHardware()
+    {
+        if(hardware_state && software_state){
+            if(!saving) sendDataSocket("checkZED");
+            else if(saving) tg_save.setChecked(true);
+            if(hardware_state!=hardware_state_old || software_state!=software_state_old) setColor();
+        }
+
+        setImageViewDraw(im_hardware,hardware_state);
+
+        setImageViewDraw(im_software,software_state);
+
+        if(!hardware_state || !software_state) {
+            setGray();
+            sendDataSocket("checkZED");
+            ProgressBarAnimation anim = new ProgressBarAnimation(pb_check,txt_system,"System Check: ", 0, 100);
+            anim.setDuration(1000);
+            pb_check.startAnimation(anim);
+        }
+    }
+
     public void didReceiveData(String data)
     {
-
+        if(data.contains("ZED_OK"))
+        {
+            hardware_state = true;
+        }
+        else if(data.contains("ZED_KO"))
+        {
+            hardware_state = false;
+        }
+        else if(data.contains("SAVING_OK"))
+        {
+            hardware_state = true;
+            saving = true;
+        }
         Log.i("Received: ",data);
     }
 
-
     public void didDisconnect()
     {
+        software_state = false;
         Log.i("didDisconnect: ","");
     }
 
@@ -229,6 +324,9 @@ public class MainActivity extends AppCompatActivity  {
     {
         Log.i("didConnect: ","Connection ok");
         sendDataSocket(configs);
+        sendDataSocket("checkSaving");
+        connected = true;
+        software_state = true;
     }
 
     private static final String TAG = "MainActivity";
@@ -272,4 +370,46 @@ public class MainActivity extends AppCompatActivity  {
         if(str.charAt(4)=='1') rb_depth.setChecked(true);
     }
 
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null;
+    }
+
+    private String getNetworkName()
+    {
+        final WifiManager wifiManager = (WifiManager) this.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiInfo info = wifiManager.getConnectionInfo();
+        return info.getSSID();
+    }
+
+    private void setGray()
+    {
+        txt.setTextColor(Color.RED);
+        rb_right.setEnabled(false);
+        rb_depth.setEnabled(false);
+        rb_leftRGB.setEnabled(false);
+        rb_rightRGB.setEnabled(false);
+        rb_left.setEnabled(false);
+        tg_save.setEnabled(false);
+        bt_requestImage.setEnabled(false);
+    }
+
+    private void setColor()
+    {
+        txt.setTextColor(Color.GRAY);
+        rb_right.setEnabled(true);
+        rb_depth.setEnabled(true);
+        rb_leftRGB.setEnabled(true);
+        rb_rightRGB.setEnabled(true);
+        rb_left.setEnabled(true);
+        tg_save.setEnabled(true);
+        bt_requestImage.setEnabled(true);
+    }
+
+    private void setImageViewDraw(ImageView im,boolean state)
+    {
+        if(state) im.setImageDrawable(getResources().getDrawable(R.drawable.connected));
+        else im.setImageDrawable(getResources().getDrawable(R.drawable.notconnected));
+    }
 }

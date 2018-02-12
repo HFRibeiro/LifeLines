@@ -1,16 +1,8 @@
 package com.lifelines.code.lifelinesmm2;
 
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import org.opencv.android.Utils;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -20,7 +12,6 @@ import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.CharBuffer;
 
 
 public class AsyncConnection extends AsyncTask<Void, String, Exception> {
@@ -32,7 +23,7 @@ public class AsyncConnection extends AsyncTask<Void, String, Exception> {
     private BufferedReader in;
     private BufferedWriter out;
     private Socket socket;
-    private boolean interrupted = false;
+    public boolean interrupted = false;
 
     private String TAG = "";
 
@@ -72,8 +63,7 @@ public class AsyncConnection extends AsyncTask<Void, String, Exception> {
             while(!interrupted) {
                 String line = in.readLine();
                 connectionHandler.didReceiveData(line);
-                if(line.contains("imgSize:")){
-                }
+
 
             }
         } catch (UnknownHostException ex) {

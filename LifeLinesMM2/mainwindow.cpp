@@ -92,6 +92,16 @@ void MainWindow::startRead()
     {
       sendImage();
     }
+    else if(dataRecieved.contains("checkZED"))
+    {
+      bool check = checkZED();
+      if(check) send("ZED_OK");
+      else send("ZED_KO");
+    }
+    else if(dataRecieved.contains("checkSaving"))
+    {
+      if(zThread->saving) send("SAVING_OK");
+    }
 
 
     ui->plainTextEdit->appendPlainText("Recived: "+dataRecieved+"\n");
@@ -184,6 +194,25 @@ void MainWindow::sendImage()
         zed.close();
     }
 
+}
+
+bool MainWindow::checkZED()
+{
+    ///////// Create a ZED camera //////////////////////////
+    Camera zed;
+    ///////// Initialize and open the camera ///////////////
+    ERROR_CODE err; // error state for all ZED SDK functions
+
+    // Open the camera
+    err = zed.open();
+
+    if (err != SUCCESS)
+    {
+        cout << toString(err) << endl;
+        zed.close();
+        return false;
+    }
+    else return true;
 }
 
 

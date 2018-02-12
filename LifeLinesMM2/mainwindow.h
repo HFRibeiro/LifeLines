@@ -35,6 +35,8 @@ private slots:
 
     void sendImage();
 
+    bool checkZED();
+
 private:
     Ui::MainWindow *ui;
     QTcpServer server;

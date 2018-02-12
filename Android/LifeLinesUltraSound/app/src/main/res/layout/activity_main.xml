@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context="pt.uevora.lifelines.lifelines.MainActivity">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_centerHorizontal="true"
+    android:layout_centerVertical="true"
+    android:orientation="vertical"
+    tools:layout_editor_absoluteX="0dp"
+    tools:layout_editor_absoluteY="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.3"
+        android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/icon_logo"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.4"
+        app:srcCompat="@drawable/lifelines" />
+
+
+    <TextView
+        android:id="@+id/txt"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.6"
+        android:textAlignment="center" />
+
+    </LinearLayout>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.05" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.6"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txt_fq"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Frequency: "
+            android:textAlignment="center" />
+
+        <SeekBar
+            android:id="@+id/sk_fq"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="80000" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="30dp" />
+
+        <TextView
+            android:id="@+id/txt_tm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Time Interval:"
+            android:textAlignment="center" />
+
+        <SeekBar
+            android:id="@+id/sk_tm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="60" />
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="30dp" />
+
+
+        <TextView
+            android:id="@+id/txt_distance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Distance (m):"
+            android:textAlignment="center" />
+
+        <SeekBar
+            android:id="@+id/sk_ds"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="1000" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="30dp" />
+
+        <Button
+            android:id="@+id/bt_send"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:text="Send"
+            android:textColor="@android:color/background_light" />
+
+
+    </LinearLayout>
+
+
+
+
+</LinearLayout>
+
+</android.support.v7.widget.LinearLayoutCompat>
