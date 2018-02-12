@@ -9,6 +9,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QThread>
+#include <QTimer>
 
 namespace Ui {
 class MainWindow;
@@ -37,10 +38,14 @@ private slots:
 
     bool checkZED();
 
+    void sendRecordTime();
+
 private:
     Ui::MainWindow *ui;
     QTcpServer server;
     QTcpSocket* client;
+    QTimer *timeOwnGameBall;
+    int recordTime;
 };
 
 #endif // MAINWINDOW_H

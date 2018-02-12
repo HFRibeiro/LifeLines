@@ -19,22 +19,26 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.OpenCVLoader;
 
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static android.widget.ImageView.ScaleType.MATRIX;
+import static android.widget.Toast.LENGTH_SHORT;
 
 public class MainActivity extends AppCompatActivity  {
 
@@ -46,7 +50,7 @@ public class MainActivity extends AppCompatActivity  {
 
     AsyncConnection socketConnection = null;
     ToggleButton tg_save;
-    Button bt_requestImage;
+    ImageView bt_requestImage;
 
     TimerTask updateConnection;
     Timer timer;
@@ -59,12 +63,17 @@ public class MainActivity extends AppCompatActivity  {
 
     ProgressBar pb_request,pb_check;
 
-    TextView txt = null,txt_request = null,txt_system = null;
+    TextView txt_saving = null,txt_request = null,txt_system = null;
 
     ImageView im_hardware = null,im_software = null;
 
+    EditText tb_track;
+
     boolean saving = false,connected = false,hardware_state = false,software_state = false,hardware_state_old = false,software_state_old = false;
 
+    int recordTime = 0,countZedCheck = 5;
+
+    int defaultTrackNumber = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,12 +81,12 @@ public class MainActivity extends AppCompatActivity  {
         setContentView(R.layout.activity_main);
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0,this,mCallBack); // Start OpenCV
 
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         editor = settings.edit();
 
         myMain = this;
 
-        txt = findViewById(R.id.txt);
+        txt_saving = findViewById(R.id.txt_saving);
         txt_request = findViewById(R.id.txt_request);
         txt_system = findViewById(R.id.txt_system);
 
@@ -97,6 +106,8 @@ public class MainActivity extends AppCompatActivity  {
         im_hardware = findViewById(R.id.im_hardware);
         im_software = findViewById(R.id.im_software);
 
+        tb_track = findViewById(R.id.tb_track);
+
         setGray();
 
         /////////////////////////////// NETWORK CHECK /////////////////////////////////////////
@@ -105,17 +116,20 @@ public class MainActivity extends AppCompatActivity  {
             if(getNetworkName().equals(AcceptSSID))
             {
                 configs = settings.getString("configs","00000");
+                defaultTrackNumber = settings.getInt("track",0);
+                defaultTrackNumber++;
+                tb_track.setText("Track_"+String.valueOf(defaultTrackNumber));
                 setChecks(configs);
                 Log.e("configsRead:",configs);
 
                 socketConnection = new  AsyncConnection("10.42.0.1",1234,1000,myMain);
 
-                startTimer(5);
+                startTimer(2);
             }
             else
             {
                 Log.e("Network: " , "is "+getNetworkName()+"\nPlease connect to "+AcceptSSID+" network");
-                txt.setText("Network: " + "is "+getNetworkName()+"\nPlease connect to "+AcceptSSID+" network");
+                txt_saving.setText("Network: " + "is "+getNetworkName()+"\nPlease connect to "+AcceptSSID+" network");
                 setGray();
             }
 
@@ -123,25 +137,58 @@ public class MainActivity extends AppCompatActivity  {
         else
         {
             Log.e("Network: " , "is not connected!\nPlease connect to "+AcceptSSID+" network");
-            txt.setText("Network: " + "is not connected!\nPlease connect to "+AcceptSSID+" network");
+            txt_saving.setText("Network: " + "is not connected!\nPlease connect to "+AcceptSSID+" network");
             setGray();
         }
         /////////////////////////////////////////////////////////////////////////////////////
-
-
-
 
         tg_save.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if(tg_save.isChecked())
                 {
-                    saving = true;
-                    sendDataSocket("startSaving");
+                    String name = tb_track.getText().toString();
+                    if(name.isEmpty())
+                    {
+                        Toast.makeText(myMain,"Please insert a Track name first", LENGTH_SHORT).show();
+                        tg_save.setChecked(false);
+                    }
+                    else if(name.equals("reset"))
+                    {
+                        editor.putInt("track", 0);
+                        editor.commit();
+                        Toast.makeText(myMain,"Track back to 1", LENGTH_SHORT).show();
+                        tb_track.setText("Track_1");
+                        tg_save.setChecked(false);
+                    }
+                    else
+                    {
+                        defaultTrackNumber++;
+                        editor.putInt("track", defaultTrackNumber);
+                        editor.commit();
+
+                        sendDataSocket("trackName"+name);
+
+                        saving = true;
+
+                        final Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sendDataSocket("startSaving");
+                                txt_saving.setTextColor(Color.GREEN);
+                                txt_saving.setText("Saving video 0s");
+                            }
+                        }, 500);
+
+                    }
                 }
                 else
                 {
                     saving = false;
                     sendDataSocket("stopSaving");
+                    tb_track.setText("Track_"+String.valueOf(defaultTrackNumber));
+                    txt_saving.setTextColor(Color.GRAY);
+                    txt_saving.setText("Not saving video");
                 }
             }
         });
@@ -267,7 +314,6 @@ public class MainActivity extends AppCompatActivity  {
                 }
                 else
                 {
-
                     //Log.i("Connected","...");
                 }
             }
@@ -278,8 +324,18 @@ public class MainActivity extends AppCompatActivity  {
     private void checkSoftwareHardware()
     {
         if(hardware_state && software_state){
-            if(!saving) sendDataSocket("checkZED");
-            else if(saving) tg_save.setChecked(true);
+            if(!saving) {
+                if(countZedCheck==5){
+                    sendDataSocket("checkZED");
+                    countZedCheck = 0;
+                }
+                else countZedCheck++;
+            }
+            else if(saving){
+                String time = getDateFromMillis(recordTime*1000);
+                txt_saving.setText("Saving video "+time);
+                tg_save.setChecked(true);
+            }
             if(hardware_state!=hardware_state_old || software_state!=software_state_old) setColor();
         }
 
@@ -310,6 +366,10 @@ public class MainActivity extends AppCompatActivity  {
         {
             hardware_state = true;
             saving = true;
+        }
+        else if(data.contains("recordTime:"))
+        {
+            recordTime = Integer.valueOf(data.replace("recordTime:",""));
         }
         Log.i("Received: ",data);
     }
@@ -370,6 +430,11 @@ public class MainActivity extends AppCompatActivity  {
         if(str.charAt(4)=='1') rb_depth.setChecked(true);
     }
 
+    public static String getDateFromMillis(long millis) {
+        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        return formatter.format(new Date(millis));
+    }
+
     private boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -385,7 +450,7 @@ public class MainActivity extends AppCompatActivity  {
 
     private void setGray()
     {
-        txt.setTextColor(Color.RED);
+        txt_saving.setTextColor(Color.RED);
         rb_right.setEnabled(false);
         rb_depth.setEnabled(false);
         rb_leftRGB.setEnabled(false);
@@ -397,7 +462,7 @@ public class MainActivity extends AppCompatActivity  {
 
     private void setColor()
     {
-        txt.setTextColor(Color.GRAY);
+        txt_saving.setTextColor(Color.GRAY);
         rb_right.setEnabled(true);
         rb_depth.setEnabled(true);
         rb_leftRGB.setEnabled(true);

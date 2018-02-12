@@ -70,6 +70,10 @@
 
     </LinearLayout>
 
+    <Space
+        android:layout_width="wrap_content"
+        android:layout_height="20dp" />
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -122,24 +126,63 @@
             android:textSize="13sp" />
     </LinearLayout>
 
+    <Space
+        android:layout_width="wrap_content"
+        android:layout_height="20dp" />
+
     <TextView
-        android:id="@+id/txt"
+        android:id="@+id/txt_track"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Saving video: "
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:text="Define Track name:" />
+
+    <EditText
+        android:id="@+id/tb_track"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:ems="10"
+        android:inputType="textPersonName" />
+
+    <TextView
+        android:id="@+id/txt_saving"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Not saving video: "
         android:textAlignment="center" />
+    <Space
+        android:layout_width="wrap_content"
+        android:layout_height="10dp" />
 
-    <ToggleButton
-        android:id="@+id/tg_save"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ON" />
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/bt_requestImage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Request Image" />
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <ToggleButton
+            android:id="@+id/tg_save"
+            style="@style/toggleButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_toggle_bg" />
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <Space
+        android:layout_width="wrap_content"
+        android:layout_height="20dp" />
 
     <TextView
         android:id="@+id/txt_request"
@@ -158,6 +201,12 @@
         android:max="100"
         android:progress="0"
         android:visibility="invisible" />
+
+    <ImageView
+        android:id="@+id/bt_requestImage"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        app:srcCompat="@drawable/down_button" />
 
 
 </LinearLayout>

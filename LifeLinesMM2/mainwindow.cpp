@@ -23,9 +23,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     client = NULL;
+    recordTime = 0;
 
     connect(&server, SIGNAL(newConnection()),this, SLOT(acceptConnection()));
-
 
     server.listen(QHostAddress::Any, 1234);
 
@@ -79,6 +79,9 @@ void MainWindow::startRead()
         if(!zThread->saving) {
             zThread->start();
             zThread->saving = true;
+            timeOwnGameBall = new QTimer();
+            connect(timeOwnGameBall,SIGNAL(timeout()),this,SLOT(sendRecordTime()));
+            timeOwnGameBall->start(1000);
         }
     }
     else if(dataRecieved.contains("stopSaving"))
@@ -86,6 +89,8 @@ void MainWindow::startRead()
         if(zThread->saving) {
             zThread->saving = false;
             zThread->quit();
+            timeOwnGameBall->stop();
+            recordTime = 0;
         }
     }
     else if(dataRecieved.contains("getImage"))
@@ -102,6 +107,10 @@ void MainWindow::startRead()
     {
       if(zThread->saving) send("SAVING_OK");
     }
+    else if(dataRecieved.contains("trackName"))
+    {
+        zThread->setTrackName(dataRecieved.replace("trackName",""));
+    }
 
 
     ui->plainTextEdit->appendPlainText("Recived: "+dataRecieved+"\n");
@@ -112,17 +121,6 @@ void MainWindow::on_btSend_clicked()
     QString txt = ui->lineEdit->text();
     send(txt);
     qDebug() << txt.toLocal8Bit();
-    /*
-    if(zThread.saving) {
-        zThread.saving = false;
-        zThread.quit();
-    }
-    else {
-        zThread.start();
-        zThread.saving = true;
-    }
-    qDebug() << zThread.saving;
-    */
 }
 
 void MainWindow::send(QString data)
@@ -213,6 +211,14 @@ bool MainWindow::checkZED()
         return false;
     }
     else return true;
+}
+
+void MainWindow::sendRecordTime()
+{
+    recordTime++;
+    send("recordTime:"+QString::number(recordTime));
+    qDebug() << "saving time: " << QString::number(recordTime);
+    ui->plainTextEdit->appendPlainText("Record: "+QString::number(recordTime)+"\n");
 }
 
 

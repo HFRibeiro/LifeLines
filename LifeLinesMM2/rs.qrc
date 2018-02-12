@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Life-lines-mm2.png</file>
+    </qresource>
+</RCC>

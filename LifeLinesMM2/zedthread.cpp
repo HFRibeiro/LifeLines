@@ -27,6 +27,8 @@ bool save_depth = false;
 using namespace std;
 using namespace sl;
 
+char *defaultVideoFolder = "/home/lifelines/MM2_Videos/";
+
 //// Sample variables (used everywhere)
 CAMERA_SETTINGS camera_settings_ = CAMERA_SETTINGS_BRIGHTNESS; // create a camera settings handle
 string str_camera_settings = "BRIGHTNESS";
@@ -42,6 +44,7 @@ cv::Mat slMat2cvMat(Mat& input);
 zedthread::zedthread()
 {
     saving = false;
+    trackName = "";
 }
 
 bool zedthread::isCameraOn()
@@ -118,6 +121,11 @@ void zedthread::setVideos(int id)
     }
 }
 
+void zedthread::setTrackName(QString name)
+{
+    trackName = name;
+}
+
 void zedthread::run()
 {
 
@@ -126,8 +134,14 @@ void zedthread::run()
     ///////// Initialize and open the camera ///////////////
     ERROR_CODE err; // error state for all ZED SDK functions
 
+    // Set configuration parameters
+   InitParameters init_params;
+   init_params.camera_resolution = RESOLUTION_HD1080; // Use HD1080 video mode
+   init_params.camera_fps = 60; // Set fps at 30
+
     // Open the camera
-    err = zed.open();
+    //err = zed.open(init_params);
+   err = zed.open();
 
     if (err != SUCCESS)
     {
@@ -150,9 +164,11 @@ void zedthread::run()
     int fps = (int) zed.getCameraFPS() / 2 ;
 
     // Create a Mat to store images
+    string name = "";
 
     #ifdef SAVE_LEFT
-    cv::VideoWriter video_left("video_left.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_left.avi");
+    cv::VideoWriter video_left(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
     Mat zed_image_left(width, height, MAT_TYPE_8U_C4);
     #endif
 
@@ -160,14 +176,18 @@ void zedthread::run()
     #ifndef SAVE_LEFT
          Mat zed_image_left(width, height, MAT_TYPE_8U_C4);
     #endif
-    cv::VideoWriter video_left_blue("video_left_blue.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
-    cv::VideoWriter video_left_green("video_left_green.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
-    cv::VideoWriter video_left_red("video_left_red.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_left_blue.avi");
+    cv::VideoWriter video_left_blue(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_left_green.avi");
+    cv::VideoWriter video_left_green(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_left_red.avi");
+    cv::VideoWriter video_left_red(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
     #endif
 
 
     #ifdef SAVE_RIGHT
-    cv::VideoWriter video_right("video_right.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_right.avi");
+    cv::VideoWriter video_right(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
     Mat  zed_image_right(width, height, MAT_TYPE_8U_C4);
     #endif
 
@@ -175,13 +195,17 @@ void zedthread::run()
     #ifndef SAVE_RIGHT
          Mat zed_image_right(width, height, MAT_TYPE_8U_C4);
     #endif
-    cv::VideoWriter video_right_blue("video_right_blue.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
-    cv::VideoWriter video_right_green("video_right_green.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
-    cv::VideoWriter video_right_red("video_right_red.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_right_blue.avi");
+    cv::VideoWriter video_right_blue(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_right_green.avi");
+    cv::VideoWriter video_right_green(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_right_red.avi");
+    cv::VideoWriter video_right_red(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
     #endif
 
     #ifdef SAVE_DEPTH
-    cv::VideoWriter video_depth("video_depth.avi",CV_FOURCC('H','2','6','4'),fps, cv::Size(1280,720),true);
+    name = ""; name.append(defaultVideoFolder); name.append(trackName.toLocal8Bit()); name.append("_depth.avi");
+    cv::VideoWriter video_depth(name,CV_FOURCC('H','2','6','4'),fps, cv::Size(width,height),true);
     Mat  depth_image(width, height, MAT_TYPE_32F_C1);
     #endif
 

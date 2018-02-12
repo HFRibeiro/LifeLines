@@ -10,11 +10,13 @@ private slots:
 public slots:
     bool isCameraOn();
     void setVideos(int id);
+    void setTrackName(QString name);
 
 public:
     zedthread();
     void run();
     bool saving;
+    QString trackName;
 
 };
 
