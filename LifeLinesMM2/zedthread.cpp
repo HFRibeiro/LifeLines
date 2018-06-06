@@ -167,7 +167,7 @@ void zedthread::run()
 
     int width = image_size.width;
     int height = image_size.height;
-    int fps = (int) zed.getCameraFPS() / 2 ;
+    int fps = (int)zed.getCameraFPS();
 
     trackName = getDateNow();
     qDebug() << "Trackname: "<< trackName;
@@ -229,11 +229,11 @@ void zedthread::run()
     {
         // Grab images and process them
         err = zed.grab();
+        //qDebug() << "ZED Camera FPS            : " << (int) zed.getCameraFPS();
 
         // Check that grab() is successful
         if (err == SUCCESS)
         {
-
             // Retrieve left image and display it with OpenCV
             #ifdef SAVE_LEFT
 
@@ -327,15 +327,15 @@ void zedthread::run()
 
             #endif
 
-            sleep_ms(20);
+            //sleep_ms(20);
 
             // Handle keyboard shortcuts
             //updateCameraSettings(key, zed);
 
         }
+
     }
     // Exit
-
 
 
     zed.close();
